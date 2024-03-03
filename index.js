@@ -1,7 +1,10 @@
 const express = require("express");
 const morgan = require("morgan");
+const cors = require("cors");
 
 const app = express();
+
+app.use(cors());
 
 morgan.token("person", function (req, res) {
   return req.body.name && req.body.number ? JSON.stringify(req.body) : null;
@@ -56,7 +59,10 @@ function getId() {
   let id;
   for (let i = 0; i < 10; i++) {
     id = Math.floor(Math.random() * 10000);
-    if (!persons.find((p) => p.id === id)) break;
+    if (!persons.find((p) => p.id === id)) {
+      break;
+    }
+    id = -1;
   }
 
   return id;
@@ -112,12 +118,17 @@ app.post("/api/persons", (request, response) => {
     number: number,
   };
 
+  if (person.id === -1) {
+    response.status(400).json({ error: "too many entries in the phonebook" });
+    return;
+  }
+
   persons = persons.concat(person);
 
   response.status(201).json(person);
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}\nAccess here: http://localhost:3001/info`);
 });
