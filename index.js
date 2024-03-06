@@ -1,6 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+const Person = require("./models/person.js");
 
 const app = express();
 
@@ -12,29 +14,6 @@ app.use(cors());
 app.use(express.static("dist"));
 app.use(express.json());
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :person"));
-
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
 
 function getDate() {
   const options = {
@@ -69,9 +48,10 @@ function getId() {
 }
 
 app.get("/api/persons", (request, response) => {
-  response.status(200).json(persons);
+  Person.find({}).then((persons) => response.status(200).json(persons));
 });
 
+//below not working with the DB (not yet implemented)
 app.get("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
   console.log("request.params.id = ", request.params.id);
@@ -85,10 +65,12 @@ app.get("/api/persons/:id", (request, response) => {
   }
 });
 
+//below not working with the DB (not yet implemented)
 app.get("/info", (request, response) => {
   response.send(`Phonebook has info for ${persons.length} people<br/>${getDate()}`);
 });
 
+//below not working with the DB (not yet implemented)
 app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
   persons = persons.filter((p) => p.id !== id);
@@ -107,28 +89,21 @@ app.post("/api/persons", (request, response) => {
     response.status(400).json({ error: "number is missing" });
     return;
   }
-  if (persons.find((p) => p.name === name)) {
-    response.status(400).json({ error: "name must be unique" });
-    return;
-  }
+  //below not working with the DB (not yet implemented)
+  // if (persons.find((p) => p.name === name)) {
+  //   response.status(400).json({ error: "name must be unique" });
+  //   return;
+  // }
 
-  let person = {
-    id: getId(),
+  const person = new Person({
     name: name,
     number: number,
-  };
+  });
 
-  if (person.id === -1) {
-    response.status(400).json({ error: "too many entries in the phonebook" });
-    return;
-  }
-
-  persons = persons.concat(person);
-
-  response.status(201).json(person);
+  person.save().then((savedPerson) => response.status(201).json(savedPerson));
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}\nAccess here: http://localhost:3001/`);
+  console.log(`Server running on port ${PORT}\n`);
 });
