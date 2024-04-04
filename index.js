@@ -1,126 +1,126 @@
-require("dotenv").config();
-const express = require("express");
-const morgan = require("morgan");
-const cors = require("cors");
-const Person = require("./models/person.js");
+require('dotenv').config()
+const express = require('express')
+const morgan = require('morgan')
+const cors = require('cors')
+const Person = require('./models/person.js')
 
-const app = express();
+const app = express()
 
-morgan.token("person", function (req, res) {
-  return req.body.name && req.body.number ? JSON.stringify(req.body) : null;
-});
+morgan.token('person', function (req) {
+  return req.body.name && req.body.number ? JSON.stringify(req.body) : null
+})
 
-app.use(cors());
-app.use(express.static("dist"));
-app.use(express.json());
-app.use(morgan(":method :url :status :res[content-length] - :response-time ms :person"));
+app.use(cors())
+app.use(express.static('dist'))
+app.use(express.json())
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :person'))
 
 function getDate() {
   const options = {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
     hour12: false,
-    timeZoneName: "longOffset",
-  };
+    timeZoneName: 'longOffset',
+  }
 
-  const dateTimeFormat = new Intl.DateTimeFormat("en-US", options);
-  const formattedDate = dateTimeFormat.format(new Date());
+  const dateTimeFormat = new Intl.DateTimeFormat('en-US', options)
+  const formattedDate = dateTimeFormat.format(new Date())
 
-  return formattedDate;
+  return formattedDate
 }
 
-app.get("/api/persons", (request, response, next) => {
+app.get('/api/persons', (request, response, next) => {
   Person.find({})
     .then((persons) => response.status(200).json(persons))
-    .catch((error) => next(error));
-});
+    .catch((error) => next(error))
+})
 
-app.get("/api/persons/:id", (request, response, next) => {
+app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
     .then((person) => {
-      response.status(200).json(person);
+      response.status(200).json(person)
     })
-    .catch((error) => next(error));
-});
+    .catch((error) => next(error))
+})
 
-app.get("/info", (request, response, next) => {
+app.get('/info', (request, response, next) => {
   Person.find({})
     .then((people) => {
-      response.send(`Phonebook has info for ${people.length} people<br/>${getDate()}`);
+      response.send(`Phonebook has info for ${people.length} people<br/>${getDate()}`)
     })
-    .catch((error) => next(error));
-});
+    .catch((error) => next(error))
+})
 
-app.delete("/api/persons/:id", (request, response, next) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-    .then((result) => {
-      response.status(204).end();
+    .then(() => {
+      response.status(204).end()
     })
     .catch((error) => {
-      next(error);
-    });
-});
+      next(error)
+    })
+})
 
-app.post("/api/persons", (request, response, next) => {
-  const name = request.body.name;
-  const number = request.body.number;
+app.post('/api/persons', (request, response, next) => {
+  const name = request.body.name
+  const number = request.body.number
   if (!name) {
-    response.status(400).json({ error: "name is missing" });
-    return;
+    response.status(400).json({ error: 'name is missing' })
+    return
   }
   if (!number) {
-    response.status(400).json({ error: "number is missing" });
-    return;
+    response.status(400).json({ error: 'number is missing' })
+    return
   }
 
   const person = new Person({
     name: name,
     number: number,
-  });
+  })
 
   person
     .save()
     .then((savedPerson) => response.status(201).json(savedPerson))
-    .catch((error) => next(error));
-});
+    .catch((error) => next(error))
+})
 
-app.put("/api/persons/:id", (request, response, next) => {
+app.put('/api/persons/:id', (request, response, next) => {
   const person = {
     name: request.body.name,
     number: request.body.number,
-  };
+  }
 
   Person.findByIdAndUpdate(request.params.id, person, {
     new: true,
     runValidators: true,
-    context: "query",
+    context: 'query',
   })
     .then((result) => {
-      response.status(200).send(result);
+      response.status(200).send(result)
     })
-    .catch((error) => next(error));
-});
+    .catch((error) => next(error))
+})
 
 const errorHandler = (error, request, response, next) => {
-  console.log(error);
+  console.log(error)
 
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "malformatted id " });
-  } else if (error.name === "ValidationError") {
-    return response.status(400).json({ error: error.message });
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id ' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
   }
 
-  next(error);
-};
+  next(error)
+}
 
-app.use(errorHandler);
+app.use(errorHandler)
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}\n`);
-});
+  console.log(`Server running on port ${PORT}\n`)
+})
