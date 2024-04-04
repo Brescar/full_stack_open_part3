@@ -34,6 +34,12 @@ function getDate() {
   return formattedDate;
 }
 
+app.get("/api/persons", (request, response, next) => {
+  Person.find({})
+    .then((persons) => response.status(200).json(persons))
+    .catch((error) => next(error));
+});
+
 app.get("/api/persons/:id", (request, response, next) => {
   Person.findById(request.params.id)
     .then((person) => {
